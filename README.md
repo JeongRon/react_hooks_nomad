@@ -122,3 +122,171 @@ const App = () => {
   );
 };
 ```
+
+## 2. USEEFFECT
+
+- useEffect란?
+
+  - ComponentDidMount, ComponentWillUnMount, ComponentDidUpdate 역할
+  - 1번째 인자 : function으로서의 effect
+    - componentDidMount()와 기능이 비슷함
+  - 2번쨰 인자 : dependency
+    - useEffect()가 dependency 리스트에 있는 값이 변할 때만 실행되게 함
+    - componentDidUpdate()와 기능이 비슷함
+
+  ```js
+  const App = () => {
+    const sayHello = () => console.log("Hello");
+    const [number, setNumber] = useState(0);
+    const [aNumber, setAnumber] = useState(0);
+    useEffect(sayHello, [number]);
+    return (
+      <div>
+        <div>Hi</div>
+        <button onClick={() => setNumber(number + 1)}>{number}</button>
+        <button onClick={() => setAnumber(aNumber + 1)}>{aNumber}</button>
+      </div>
+    );
+  };
+  ```
+
+- useTitle
+
+  ```js
+  // useTitle : ComponentDidMount, ComponentDidUpdate
+  const useTitle = (initialTitle) => {
+    const [title, setTitle] = useState(initialTitle);
+    const updateTitle = () => {
+      const htmlTitle = document.querySelector("title");
+      htmlTitle.innerText = title;
+    };
+    useEffect(updateTitle, [title]);
+    return setTitle;
+  };
+
+  const App = () => {
+    const titleUpdater = useTitle("Loading ...");
+    setTimeout(() => titleUpdater("FriYay"), 3000);
+    return (
+      <div>
+        <div>Hi</div>
+      </div>
+    );
+  };
+  ```
+
+- reference 란?
+
+  - component의 특정 부분을 선택할 수 있는 방법
+  - documen.getElementById()와 비슷
+
+  ```js
+  const App = () => {
+    const potato = useRef();
+    setTimeout(() => potato.current.focus(), 3000);
+    return (
+      <div>
+        <div>Hi</div>
+        <input ref={potato} placeholder="la"></input>
+      </div>
+    );
+  };
+  ```
+
+- useClick
+
+  - reference는 component의 어떤 부분을 선택할 수 있는 방법이다.
+  - 모든 component는 reference prop을 가지고 있다.
+  - useRef()는 document.getElementById() 와 같은 기능을 한다.
+  - htmlTag에 ref={이름} 와 같이 사용한다.
+  - reference는 {current: HTMLHeadingElement} 의 형식으로 값을 반환한다.
+  - useEffect에서 return한 함수는 componentWillUnmount 때 호출된다.
+  - useEffect에서 return한 함수를 cleanup function(클린업 함수)라고 부른다.
+
+  ```js
+  // useClick
+  const useClick = (onClick) => {
+    const ref = useRef();
+    useEffect(() => {
+      const element = ref;
+      if (element.current) {
+        element.current.addEventListener("click", onClick);
+      }
+      return () => {
+        if (element.current) {
+          element.current.removeEventListener("click", onClick);
+        }
+      };
+    });
+    if (typeof onClick !== "object") return;
+    return ref;
+  };
+
+  const App = () => {
+    const sayHello = () => console.log("say Hello");
+    const title = useClick(sayHello);
+    return (
+      <div>
+        <h1 ref={title}>Hi, there!</h1>
+      </div>
+    );
+  };
+  ```
+
+- useConfirm
+
+  ```js
+  // useConfirm
+  const useConfirm = (message = "", onConfirm, onCancel) => {
+    if (typeof onConfirm !== "function") return;
+    const confirmAction = () => {
+      if (window.confirm(message)) {
+        onConfirm();
+      } else {
+        try {
+          onCancel();
+        } catch (error) {
+          return;
+        }
+      }
+    };
+    return confirmAction;
+  };
+
+  const App = () => {
+    const deleteWorld = () => console.log("Deleting the world");
+    const abort = () => console.log("Aborted");
+    const confirmDelete = useConfirm("Are you sure", deleteWorld, abort);
+    return (
+      <div>
+        <button onClick={confirmDelete}>Delete the world</button>
+      </div>
+    );
+  };
+  ```
+
+- usePreventLeave
+
+  ```js
+  const usePreventLeave = () => {
+    const listener = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    const enablePrevent = () =>
+      window.addEventListener("beforeunload", listener);
+    const disablePrevent = () =>
+      window.removeEventListener("beforeunload", listener);
+    return { enablePrevent, disablePrevent };
+  };
+
+  const App = () => {
+    const { enablePrevent, disablePrevent } = usePreventLeave();
+    return (
+      <div>
+        <button onClick={enablePrevent}>Protect</button>
+        <button onClick={disablePrevent}>UnProtect</button>
+      </div>
+    );
+  };
+  ```
